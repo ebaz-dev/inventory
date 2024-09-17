@@ -1,8 +1,8 @@
 import { Publisher } from "@ebazdev/core";
-import { InventoryUpdatedEvent } from "../../shared/events/inventory-update-event";
+import { InventoryUpdatedEvent } from "../../shared/events/inventory-updated-event";
 import { InventoryEventSubjects } from "../../shared/events/inventory-event-subjects";
 
 export class InventoryUpdatedPublisher extends Publisher<InventoryUpdatedEvent> {
-  subject: InventoryEventSubjects.InventoryUpdate =
-    InventoryEventSubjects.InventoryUpdate;
+  subject: InventoryEventSubjects.InventoryUpdated =
+    InventoryEventSubjects.InventoryUpdated;
 }

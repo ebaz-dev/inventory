@@ -1,7 +1,7 @@
 import { InventoryEventSubjects } from "./inventory-event-subjects";
 
-export interface InventoryCreateEvent {
-  subject: InventoryEventSubjects.InventoryCreate;
+export interface InventoryCreatedEvent {
+  subject: InventoryEventSubjects.InventoryCreated;
   data: {
     id: string;
     productId: string;

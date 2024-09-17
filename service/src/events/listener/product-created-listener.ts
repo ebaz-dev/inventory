@@ -13,7 +13,6 @@ export class ProductCreatedListener extends Listener<ProductCreatedEvent> {
 
   async onMessage(data: ProductCreatedEvent["data"], msg: Message) {
     const { id } = data;
-
     const session = await mongoose.startSession();
     session.startTransaction();
 
