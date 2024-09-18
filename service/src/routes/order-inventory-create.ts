@@ -1,7 +1,7 @@
 import express, { Request, Response } from "express";
 import { body } from "express-validator";
 import { validateRequest, BadRequestError } from "@ebazdev/core";
-import { OrderInventory, Item } from "../shared/models/order-inventory";
+import { OrderInventory, Product } from "../shared/models/order-inventory";
 import { Inventory } from "../shared/models/inventory";
 import { StatusCodes } from "http-status-codes";
 import { OrderInventoryCreatedPublisher } from "../events/publisher/order-inventory-created-publisher";
@@ -13,7 +13,7 @@ const router = express.Router();
 interface OrderRequestBody {
   cartId: string;
   customerId: string;
-  items: Item[];
+  products: Product[];
   orderId?: string;
 }
 
@@ -36,33 +36,34 @@ router.post(
   ],
   validateRequest,
   async (req: Request, res: Response) => {
-    const { cartId, items, orderId, customerId } = req.body as OrderRequestBody;
+    const { cartId, products, orderId, customerId } =
+      req.body as OrderRequestBody;
 
     const session = await mongoose.startSession();
     session.startTransaction();
 
     try {
-      for (const item of items) {
+      for (const product of products) {
         const inventory = await Inventory.findOne({
-          productId: item.productId,
+          productId: product.productId,
         }).session(session);
 
         if (!inventory) {
           throw new BadRequestError(
-            `Inventory not found for product ID: ${item.productId}`
+            `Inventory not found for product ID: ${product.productId}`
           );
         }
 
         const availableStock = inventory.availableStock;
 
-        if (item.quantity > availableStock) {
+        if (product.quantity > availableStock) {
           throw new BadRequestError(
-            `Insufficient stock for product ID: ${item.productId}`
+            `Insufficient stock for product ID: ${product.productId}`
           );
         }
 
-        inventory.availableStock = inventory.availableStock - item.quantity;
-        inventory.reservedStock = inventory.reservedStock + item.quantity;
+        inventory.availableStock = inventory.availableStock - product.quantity;
+        inventory.reservedStock = inventory.reservedStock + product.quantity;
 
         await inventory.save({ session });
       }
@@ -70,7 +71,7 @@ router.post(
       const orderInventory = new OrderInventory({
         customerId,
         cartId,
-        items,
+        products,
         ...(orderId && { orderId }),
       });
 
@@ -81,9 +82,9 @@ router.post(
         customerId: orderInventory.customerId.toString(),
         cartId: orderInventory.cartId.toString(),
         orderId: orderInventory.orderId?.toString(),
-        items: orderInventory.items.map((item) => ({
-          productId: item.productId.toString(),
-          quantity: item.quantity,
+        products: orderInventory.products.map((product) => ({
+          productId: product.productId.toString(),
+          quantity: product.quantity,
         })),
       });
 

@@ -1,7 +1,7 @@
 import { Document, Schema, model, Types } from "mongoose";
 import { updateIfCurrentPlugin } from "mongoose-update-if-current";
 
-export interface Item {
+export interface Product {
   productId: Types.ObjectId;
   quantity: number;
 }
@@ -11,10 +11,10 @@ interface OrderInventoryDoc extends Document {
   customerId: Types.ObjectId;
   cartId: Types.ObjectId;
   orderId?: Types.ObjectId;
-  items: Item[];
+  products: Product[];
 }
 
-const itemSchema = new Schema<Item>({
+const itemSchema = new Schema<Product>({
   productId: {
     type: Schema.Types.ObjectId,
     required: true,
@@ -43,10 +43,10 @@ const orderInventorySchema = new Schema<OrderInventoryDoc>(
       type: Schema.Types.ObjectId,
       ref: "Order",
     },
-    items: {
+    products: {
       type: [itemSchema],
       validate: {
-        validator: (value: Item[]) => value.length > 0,
+        validator: (value: Product[]) => value.length > 0,
         message: "At least one item must be included in the order.",
       },
     },
@@ -59,9 +59,11 @@ const orderInventorySchema = new Schema<OrderInventoryDoc>(
         delete ret.__v;
       },
     },
+    timestamps: true,
   }
 );
 
+orderInventorySchema.set("versionKey", "version");
 orderInventorySchema.plugin(updateIfCurrentPlugin);
 
 const OrderInventory = model<OrderInventoryDoc>(

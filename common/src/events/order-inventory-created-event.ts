@@ -7,7 +7,7 @@ export interface OrderInventoryCreatedEvent {
     customerId: string;
     cartId: string;
     orderId?: string;
-    items: {
+    products: {
       productId: string;
       quantity: number;
     }[];

@@ -38,6 +38,7 @@ const inventorySchema = new Schema<InventoryDoc>(
         delete ret.__v;
       },
     },
+    timestamps: true,
   }
 );
 
