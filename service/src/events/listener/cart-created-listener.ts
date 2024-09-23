@@ -14,7 +14,7 @@
 //   queueGroupName = queueGroupName;
 
 //   async onMessage(data: CartCreatedEvent["data"], msg: Message) {
-//     const { id, customerId, products } = data;
+//     const { id, status, supplierId, merchantId, userId, products, orderedAt } = data;
 
 //     const cart = await Cart.findById(id);
 //     if (!cart) {
@@ -27,7 +27,7 @@
 //     try {
 //       for (const product of products) {
 //         const inventory = await Inventory.findOne({
-//           productId: product.productId,
+//           productId: product.id,
 //         }).session(session);
 
 //         if (!inventory) {
@@ -51,8 +51,11 @@
 //       }
 
 //       const orderInventory = new OrderInventory({
+//         supplierId: supplierId,
+//         merchantId: merchantId,
+//         userId: userId,
 //         cartId: id,
-//         customerId,
+//         cartConfirmData: orderedAt,
 //         products,
 //       });
 
@@ -60,10 +63,14 @@
 
 //       await new OrderInventoryCreatedPublisher(natsWrapper.client).publish({
 //         id: orderInventory.id,
-//         customerId: orderInventory.customerId.toString(),
+//         supplierId: orderInventory.supplierId.toString(),
+//         merchantId: orderInventory.merchantId.toString(),
+//         userId: orderInventory.userId.toString(),
 //         cartId: orderInventory.cartId.toString(),
+//         status: orderInventory.status.toString(),
+//         cartConfirmData: orderInventory.cartConfirmData,
 //         products: orderInventory.products.map((product) => ({
-//           productId: product.productId.toString(),
+//           id: product.id.toString(),
 //           quantity: product.quantity,
 //         })),
 //       });

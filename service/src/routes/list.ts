@@ -52,7 +52,7 @@ router.get(
       }
 
       res.status(StatusCodes.OK).send({
-        products: inventories,
+        data: inventories,
         total,
         totalPages: Math.ceil(total / limitNumber),
         currentPage: pageNumber,

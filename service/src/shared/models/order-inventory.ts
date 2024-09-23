@@ -2,20 +2,24 @@ import { Document, Schema, model, Types } from "mongoose";
 import { updateIfCurrentPlugin } from "mongoose-update-if-current";
 
 export interface Product {
-  productId: Types.ObjectId;
+  id: Types.ObjectId;
   quantity: number;
 }
 
 interface OrderInventoryDoc extends Document {
   _id: Types.ObjectId;
-  customerId: Types.ObjectId;
+  supplierId: Types.ObjectId;
+  merchantId: Types.ObjectId;
+  userId: Types.ObjectId;
   cartId: Types.ObjectId;
   orderId?: Types.ObjectId;
+  status: string;
+  cartConfirmData: Date;
   products: Product[];
 }
 
 const itemSchema = new Schema<Product>({
-  productId: {
+  id: {
     type: Schema.Types.ObjectId,
     required: true,
     ref: "Product",
@@ -29,10 +33,20 @@ const itemSchema = new Schema<Product>({
 
 const orderInventorySchema = new Schema<OrderInventoryDoc>(
   {
-    customerId: {
+    supplierId: {
       type: Schema.Types.ObjectId,
       required: true,
       ref: "Customer",
+    },
+    merchantId: {
+      type: Schema.Types.ObjectId,
+      required: true,
+      ref: "Customer",
+    },
+    userId: {
+      type: Schema.Types.ObjectId,
+      required: true,
+      ref: "User",
     },
     cartId: {
       type: Schema.Types.ObjectId,
@@ -42,6 +56,14 @@ const orderInventorySchema = new Schema<OrderInventoryDoc>(
     orderId: {
       type: Schema.Types.ObjectId,
       ref: "Order",
+    },
+    status: {
+      type: String,
+      required: true,
+    },
+    cartConfirmData: {
+      type: Date,
+      required: true,
     },
     products: {
       type: [itemSchema],

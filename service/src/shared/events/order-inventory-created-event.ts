@@ -4,11 +4,15 @@ export interface OrderInventoryCreatedEvent {
   subject: OrderInventoryEventSubjects.OrderInventoryCreated;
   data: {
     id: string;
-    customerId: string;
+    supplierId: string;
+    merchantId: string;
+    userId: string;
     cartId: string;
     orderId?: string;
+    status: string;
+    cartConfirmData: Date;
     products: {
-      productId: string;
+      id: string;
       quantity: number;
     }[];
   };
