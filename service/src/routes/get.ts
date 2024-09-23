@@ -3,17 +3,22 @@ import { param } from "express-validator";
 import { validateRequest, BadRequestError } from "@ebazdev/core";
 import { Inventory } from "../shared/models/inventory";
 import { StatusCodes } from "http-status-codes";
+import mongoose from "mongoose";
 
 const router = express.Router();
 
 router.get(
-  "/:productId",
-  [param("productId").isMongoId().withMessage("Invalid product id")],
+  "/:id",
+  [
+    param("id")
+      .custom((value) => mongoose.Types.ObjectId.isValid(value))
+      .withMessage("Invalid inventory id"),
+  ],
   validateRequest,
   async (req: Request, res: Response) => {
-    const { productId } = req.params;
+    const { id } = req.params;
 
-    const inventory = await Inventory.findOne({ productId: productId });
+    const inventory = await Inventory.findById(id);
     if (!inventory) {
       throw new BadRequestError("Inventory not found");
     }

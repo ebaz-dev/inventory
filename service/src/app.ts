@@ -5,7 +5,8 @@ import { errorHandler, NotFoundError } from "@ebazdev/core";
 import cookieSession from "cookie-session";
 import { getRouter } from "./routes/get";
 import { listRouter } from "./routes/list";
-import * as dotenv from "dotenv";
+import dotenv from "dotenv";
+
 dotenv.config();
 
 const apiPrefix = "/api/v1/inventory";
@@ -21,8 +22,8 @@ app.use(
   })
 );
 
-app.use(apiPrefix, getRouter);
 app.use(apiPrefix, listRouter);
+app.use(apiPrefix, getRouter);
 
 app.all("*", async () => {
   throw new NotFoundError();

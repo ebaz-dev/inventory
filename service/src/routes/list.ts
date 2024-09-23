@@ -3,16 +3,22 @@ import { query } from "express-validator";
 import { validateRequest, BadRequestError, NotFoundError } from "@ebazdev/core";
 import { Inventory } from "../shared/models/inventory";
 import { StatusCodes } from "http-status-codes";
+import mongoose from "mongoose";
 
 const router = express.Router();
 
 router.get(
   "/list",
   [
-    query("productIds").isArray().withMessage("Product IDs should be an array"),
-    query("productIds.*")
-      .isMongoId()
-      .withMessage("Invalid product id in array"),
+    query("productIds")
+      .optional()
+      .custom((value) => {
+        const idsArray = value.split(",").map((id: string) => id.trim());
+        return idsArray.every((id: string) =>
+          mongoose.Types.ObjectId.isValid(id)
+        );
+      })
+      .withMessage("IDs must be a comma-separated list of valid ObjectIds"),
     query("page")
       .optional()
       .isInt({ min: 1 })
@@ -26,20 +32,18 @@ router.get(
   async (req: Request, res: Response) => {
     const { productIds, page = "1", limit = "10" } = req.query;
     try {
-      if (!Array.isArray(productIds)) {
-        throw new BadRequestError("Product IDs must be an array");
-      }
-
-      const idsArray = (productIds as string[]).map((id: string) => id.trim());
+      const idsArray = productIds
+        ? (productIds as string).split(",").map((id: string) => id.trim())
+        : [];
       const pageNumber = Math.max(1, parseInt(page as string, 10));
       const limitNumber = Math.max(1, parseInt(limit as string, 10));
       const skip = (pageNumber - 1) * limitNumber;
 
-      const total = await Inventory.countDocuments({
-        productId: { $in: idsArray },
-      });
+      const query = productIds ? { productId: { $in: idsArray } } : {};
 
-      const inventories = await Inventory.find({ productId: { $in: idsArray } })
+      const total = await Inventory.countDocuments(query);
+
+      const inventories = await Inventory.find(query)
         .skip(skip)
         .limit(limitNumber);
 
