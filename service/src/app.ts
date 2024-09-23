@@ -3,8 +3,8 @@ import "express-async-errors";
 import { json } from "body-parser";
 import { errorHandler, NotFoundError } from "@ebazdev/core";
 import cookieSession from "cookie-session";
-import { getRouter } from "./routes/get";
 import { listRouter } from "./routes/list";
+import { getRouter } from "./routes/get";
 import dotenv from "dotenv";
 
 dotenv.config();
