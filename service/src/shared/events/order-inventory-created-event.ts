@@ -8,9 +8,10 @@ export interface OrderInventoryCreatedEvent {
     merchantId: string;
     userId: string;
     cartId: string;
+    cartStatus: string;
     orderId?: string;
-    status: string;
-    cartConfirmData: Date;
+    orderStatus?: string;
+    cartDate: Date;
     products: {
       id: string;
       quantity: number;

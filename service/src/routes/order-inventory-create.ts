@@ -15,29 +15,56 @@ interface OrderRequestBody {
   customerId: string;
   products: Product[];
   orderId?: string;
+  supplierId: string;
+  merchantId: string;
+  userId: string;
+  cartConfirmData: Date;
+  status: string;
 }
 
 router.post(
   "/order/create",
   [
     body("cartId").isMongoId().withMessage("Cart ID must be a valid Mongo ID"),
-    body("customerId")
+    body("supplierId")
       .isMongoId()
-      .withMessage("Customer ID must be a valid Mongo ID"),
-    body("items")
+      .withMessage("Supplier ID must be a valid Mongo ID"),
+    body("merchantId")
+      .isMongoId()
+      .withMessage("Merchant ID must be a valid Mongo ID"),
+    body("userId")
+      .isMongoId()
+      .withMessage("User ID must be a valid Mongo ID"),
+    body("cartConfirmData")
+      .isISO8601()
+      .toDate()
+      .withMessage("Cart Confirm Data must be a valid date"),
+    body("status")
+      .isString()
+      .withMessage("Status must be a valid string"),
+    body("products")
       .isArray({ min: 1 })
-      .withMessage("Items must be an array with at least one item"),
-    body("items.*.productId")
+      .withMessage("Products must be an array with at least one item"),
+    body("products.*.id")
       .isMongoId()
       .withMessage("Product ID must be a valid Mongo ID"),
-    body("items.*.quantity")
+    body("products.*.quantity")
       .isInt({ min: 0 })
       .withMessage("Quantity must be a non-negative integer"),
   ],
   validateRequest,
   async (req: Request, res: Response) => {
-    const { cartId, products, orderId, customerId } =
-      req.body as OrderRequestBody;
+
+    const {
+      cartId,
+      products,
+      orderId,
+      supplierId,
+      merchantId,
+      userId,
+      cartDate,
+      status,
+    } = req.body;
 
     const session = await mongoose.startSession();
     session.startTransaction();
@@ -45,12 +72,12 @@ router.post(
     try {
       for (const product of products) {
         const inventory = await Inventory.findOne({
-          productId: product.productId,
+          productId: product.id,
         }).session(session);
 
         if (!inventory) {
           throw new BadRequestError(
-            `Inventory not found for product ID: ${product.productId}`
+            `Inventory not found for product ID: ${product.id}`
           );
         }
 
@@ -58,7 +85,7 @@ router.post(
 
         if (product.quantity > availableStock) {
           throw new BadRequestError(
-            `Insufficient stock for product ID: ${product.productId}`
+            `Insufficient stock for product ID: ${product.id}`
           );
         }
 
@@ -69,9 +96,13 @@ router.post(
       }
 
       const orderInventory = new OrderInventory({
-        customerId,
+        supplierId: supplierId,
+        merchantId: merchantId,
+        userId,
         cartId,
         products,
+        status,
+        cartDate,
         ...(orderId && { orderId }),
       });
 
@@ -79,11 +110,15 @@ router.post(
 
       await new OrderInventoryCreatedPublisher(natsWrapper.client).publish({
         id: orderInventory.id,
-        customerId: orderInventory.customerId.toString(),
+        supplierId: orderInventory.supplierId.toString(),
+        merchantId: orderInventory.merchantId.toString(),
+        userId: orderInventory.userId.toString(),
         cartId: orderInventory.cartId.toString(),
+        cartStatus: orderInventory.cartStatus,
+        cartDate: orderInventory.cartDate,
         orderId: orderInventory.orderId?.toString(),
         products: orderInventory.products.map((product) => ({
-          productId: product.productId.toString(),
+          id: product.id.toString(),
           quantity: product.quantity,
         })),
       });

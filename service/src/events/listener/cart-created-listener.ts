@@ -14,7 +14,7 @@
 //   queueGroupName = queueGroupName;
 
 //   async onMessage(data: CartCreatedEvent["data"], msg: Message) {
-//     const { id, status, supplierId, merchantId, userId, products, orderedAt } = data;
+//     const { id, cartStatus, supplierId, merchantId, userId, products, orderedAt } = data;
 
 //     const cart = await Cart.findById(id);
 //     if (!cart) {
@@ -55,20 +55,21 @@
 //         merchantId: merchantId,
 //         userId: userId,
 //         cartId: id,
-//         cartConfirmData: orderedAt,
+//         cartStatus: cartStatus,
+//         cartDate: orderedAt,
 //         products,
 //       });
 
 //       await orderInventory.save({ session });
 
 //       await new OrderInventoryCreatedPublisher(natsWrapper.client).publish({
-//         id: orderInventory.id,
+//         id: orderInventory.id.toString(),
 //         supplierId: orderInventory.supplierId.toString(),
 //         merchantId: orderInventory.merchantId.toString(),
 //         userId: orderInventory.userId.toString(),
 //         cartId: orderInventory.cartId.toString(),
-//         status: orderInventory.status.toString(),
-//         cartConfirmData: orderInventory.cartConfirmData,
+//         cartStatus: orderInventory.cartStatus.toString(),
+//         cartDate: orderInventory.cartDate,
 //         products: orderInventory.products.map((product) => ({
 //           id: product.id.toString(),
 //           quantity: product.quantity,

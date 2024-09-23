@@ -12,9 +12,11 @@ interface OrderInventoryDoc extends Document {
   merchantId: Types.ObjectId;
   userId: Types.ObjectId;
   cartId: Types.ObjectId;
+  cartStatus: string;
   orderId?: Types.ObjectId;
-  status: string;
-  cartConfirmData: Date;
+  orderStatus?: string;
+  cartDate: Date;
+  orderData?: Date;
   products: Product[];
 }
 
@@ -53,17 +55,23 @@ const orderInventorySchema = new Schema<OrderInventoryDoc>(
       required: true,
       ref: "Cart",
     },
+    cartStatus: {
+      type: String,
+      required: true,
+    },
+    cartDate: {
+      type: Date,
+      required: true,
+    },
     orderId: {
       type: Schema.Types.ObjectId,
       ref: "Order",
     },
-    status: {
-      type: String,
-      required: true,
+    orderStatus: {
+      type: String
     },
-    cartConfirmData: {
-      type: Date,
-      required: true,
+    orderData: {
+      type: Date
     },
     products: {
       type: [itemSchema],
