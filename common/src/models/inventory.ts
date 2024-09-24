@@ -47,4 +47,4 @@ inventorySchema.plugin(updateIfCurrentPlugin);
 
 const Inventory = model<InventoryDoc>("Inventory", inventorySchema);
 
-export { Inventory };
+export { Inventory, InventoryDoc };
