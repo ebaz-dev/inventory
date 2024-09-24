@@ -16,7 +16,7 @@ interface OrderInventoryDoc extends Document {
   orderId?: Types.ObjectId;
   orderStatus?: string;
   cartDate: Date;
-  orderData?: Date;
+  orderDate?: Date;
   products: Product[];
 }
 
@@ -70,7 +70,7 @@ const orderInventorySchema = new Schema<OrderInventoryDoc>(
     orderStatus: {
       type: String
     },
-    orderData: {
+    orderDate: {
       type: Date
     },
     products: {
