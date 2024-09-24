@@ -14,7 +14,7 @@ export class CartCreatedListener extends Listener<CartConfirmedEvent> {
   queueGroupName = queueGroupName;
 
   async onMessage(data: CartConfirmedEvent["data"], msg: Message) {
-    const { id, status, supplierId, merchantId, userId, products, orderedAt } = data;
+    const { id, products } = data;
 
     const cart = await Cart.findById(id);
     if (!cart) {
@@ -60,12 +60,7 @@ export class CartCreatedListener extends Listener<CartConfirmedEvent> {
       }
 
       const orderInventory = new OrderInventory({
-        supplierId: supplierId,
-        merchantId: merchantId,
-        userId: userId,
         cartId: id,
-        cartStatus: status,
-        cartDate: orderedAt,
         products,
       });
 
@@ -78,12 +73,7 @@ export class CartCreatedListener extends Listener<CartConfirmedEvent> {
 
       await new OrderInventoryCreatedPublisher(natsWrapper.client).publish({
         id: orderInventory.id.toString(),
-        supplierId: orderInventory.supplierId.toString(),
-        merchantId: orderInventory.merchantId.toString(),
-        userId: orderInventory.userId.toString(),
         cartId: orderInventory.cartId.toString(),
-        cartStatus: orderInventory.cartStatus.toString(),
-        cartDate: orderInventory.cartDate,
         products: orderInventory.products.map((product) => ({
           id: product.id.toString(),
           quantity: product.quantity,

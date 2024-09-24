@@ -8,14 +8,12 @@ export interface Product {
 
 interface OrderInventoryDoc extends Document {
   _id: Types.ObjectId;
-  supplierId: Types.ObjectId;
-  merchantId: Types.ObjectId;
-  userId: Types.ObjectId;
+  supplierId?: Types.ObjectId;
+  merchantId?: Types.ObjectId;
   cartId: Types.ObjectId;
-  cartStatus: string;
+  cartStatus?: string;
   orderId?: Types.ObjectId;
   orderStatus?: string;
-  cartDate: Date;
   orderDate?: Date;
   products: Product[];
 }
@@ -37,18 +35,13 @@ const orderInventorySchema = new Schema<OrderInventoryDoc>(
   {
     supplierId: {
       type: Schema.Types.ObjectId,
-      required: true,
+      required: false,
       ref: "Customer",
     },
     merchantId: {
       type: Schema.Types.ObjectId,
-      required: true,
+      required: false,
       ref: "Customer",
-    },
-    userId: {
-      type: Schema.Types.ObjectId,
-      required: true,
-      ref: "User",
     },
     cartId: {
       type: Schema.Types.ObjectId,
@@ -57,14 +50,11 @@ const orderInventorySchema = new Schema<OrderInventoryDoc>(
     },
     cartStatus: {
       type: String,
-      required: true,
-    },
-    cartDate: {
-      type: Date,
-      required: true,
+      required: false,
     },
     orderId: {
       type: Schema.Types.ObjectId,
+      required: false,
       ref: "Order",
     },
     orderStatus: {

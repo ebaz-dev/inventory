@@ -110,12 +110,10 @@ router.post(
 
       await new OrderInventoryCreatedPublisher(natsWrapper.client).publish({
         id: orderInventory.id,
-        supplierId: orderInventory.supplierId.toString(),
-        merchantId: orderInventory.merchantId.toString(),
-        userId: orderInventory.userId.toString(),
-        cartId: orderInventory.cartId.toString(),
-        cartStatus: orderInventory.cartStatus,
-        cartDate: orderInventory.cartDate,
+        supplierId: orderInventory.supplierId?.toString(),
+        merchantId: orderInventory.merchantId?.toString(),
+        cartId: orderInventory?.cartId.toString(),
+        cartStatus: orderInventory?.cartStatus,
         orderId: orderInventory.orderId?.toString(),
         products: orderInventory.products.map((product) => ({
           id: product.id.toString(),
