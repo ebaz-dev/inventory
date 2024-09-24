@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import { app } from "./app";
 import { natsWrapper } from "./nats-wrapper";
 import { ProductCreatedListener } from "./events/listener/product-created-listener";
+import { CartCreatedListener } from "./events/listener/cart-created-listener"
 
 const start = async () => {
   if (!process.env.PORT) {
@@ -42,6 +43,7 @@ const start = async () => {
     process.on("SIGTERM", () => natsWrapper.client.close());
 
     new ProductCreatedListener(natsWrapper.client).listen();
+    new CartCreatedListener(natsWrapper.client).listen();
 
     await mongoose.connect(process.env.MONGO_URI);
     console.log("Connected to DB");
