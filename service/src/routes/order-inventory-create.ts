@@ -32,16 +32,12 @@ router.post(
     body("merchantId")
       .isMongoId()
       .withMessage("Merchant ID must be a valid Mongo ID"),
-    body("userId")
-      .isMongoId()
-      .withMessage("User ID must be a valid Mongo ID"),
+    body("userId").isMongoId().withMessage("User ID must be a valid Mongo ID"),
     body("cartConfirmData")
       .isISO8601()
       .toDate()
       .withMessage("Cart Confirm Data must be a valid date"),
-    body("status")
-      .isString()
-      .withMessage("Status must be a valid string"),
+    body("status").isString().withMessage("Status must be a valid string"),
     body("products")
       .isArray({ min: 1 })
       .withMessage("Products must be an array with at least one item"),
@@ -54,7 +50,6 @@ router.post(
   ],
   validateRequest,
   async (req: Request, res: Response) => {
-
     const {
       cartId,
       products,

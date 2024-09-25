@@ -5,4 +5,4 @@ export * from "./events/order-inventory-event-subjects";
 export * from "./events/inventory-created-event";
 export * from "./events/inventory-updated-event";
 export * from "./events/order-inventory-created-event";
-export * from "./events/cart-inventory-checked-event"
+export * from "./events/cart-inventory-checked-event";

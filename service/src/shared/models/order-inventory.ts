@@ -18,18 +18,21 @@ interface OrderInventoryDoc extends Document {
   products: Product[];
 }
 
-const itemSchema = new Schema<Product>({
-  id: {
-    type: Schema.Types.ObjectId,
-    required: true,
-    ref: "Product",
+const itemSchema = new Schema<Product>(
+  {
+    id: {
+      type: Schema.Types.ObjectId,
+      required: true,
+      ref: "Product",
+    },
+    quantity: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
   },
-  quantity: {
-    type: Number,
-    required: true,
-    min: 0,
-  },
-});
+  { _id: false }
+);
 
 const orderInventorySchema = new Schema<OrderInventoryDoc>(
   {
@@ -58,10 +61,10 @@ const orderInventorySchema = new Schema<OrderInventoryDoc>(
       ref: "Order",
     },
     orderStatus: {
-      type: String
+      type: String,
     },
     orderDate: {
-      type: Date
+      type: Date,
     },
     products: {
       type: [itemSchema],

@@ -1,6 +1,6 @@
 import { OrderInventoryEventSubjects } from "./order-inventory-event-subjects";
 
-type CartStatus = 'cancelled' | 'confirmed';
+type CartStatus = "cancelled" | "confirmed";
 
 export interface CartInventoryCheckedEvent {
   subject: OrderInventoryEventSubjects.CartInventoryChecked;
