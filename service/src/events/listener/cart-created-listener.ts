@@ -31,10 +31,6 @@ export class CartCreatedListener extends Listener<CartConfirmedEvent> {
         }).session(session);
 
         if (!inventory) {
-          await new CartInventoryChecked(natsWrapper.client).publish({
-            cartId: id.toString(),
-            status: "cancelled",
-          });
           throw new BadRequestError(
             `Inventory not found for product ID: ${product.id}`
           );
@@ -43,11 +39,6 @@ export class CartCreatedListener extends Listener<CartConfirmedEvent> {
         const availableStock = inventory.availableStock;
 
         if (product.quantity > availableStock) {
-          await new CartInventoryChecked(natsWrapper.client).publish({
-            cartId: id.toString(),
-            status: "cancelled",
-          });
-
           throw new BadRequestError(
             `Insufficient stock for product ID: ${product.id}`
           );
