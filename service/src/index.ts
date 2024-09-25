@@ -3,6 +3,9 @@ import { app } from "./app";
 import { natsWrapper } from "./nats-wrapper";
 import { ProductCreatedListener } from "./events/listener/product-created-listener";
 import { CartCreatedListener } from "./events/listener/cart-created-listener";
+import { OrderCreatedListener } from "./events/listener/order-created-listener";
+import { OrderDeliveredListener } from "./events/listener/order-delivered-listener";
+import { OrderCancelledListener } from "./events/listener/order-cancelled-listener";
 
 const start = async () => {
   if (!process.env.PORT) {
@@ -44,6 +47,9 @@ const start = async () => {
 
     new ProductCreatedListener(natsWrapper.client).listen();
     new CartCreatedListener(natsWrapper.client).listen();
+    new OrderCreatedListener(natsWrapper.client).listen();
+    new OrderDeliveredListener(natsWrapper.client).listen();
+    new OrderCancelledListener(natsWrapper.client).listen();
 
     await mongoose.connect(process.env.MONGO_URI);
     console.log("Connected to DB");

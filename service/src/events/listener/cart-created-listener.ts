@@ -1,8 +1,8 @@
 import { Message } from "node-nats-streaming";
 import { Listener, BadRequestError } from "@ebazdev/core";
-import { CartConfirmedEvent, CartEventSubjects, Cart } from "@ebazdev/order";
+import { CartConfirmedEvent, CartEventSubjects } from "@ebazdev/order";
 import { queueGroupName } from "./queu-group-name";
-import { Inventory } from "../../shared/models/inventory";
+import { Inventory, InventoryCheckSatus } from "../../shared/models/inventory";
 import { OrderInventory } from "../../shared/models/order-inventory";
 import { OrderInventoryCreatedPublisher } from "../publisher/order-inventory-created-publisher";
 import { CartInventoryChecked } from "../publisher/cart-inventory-checked-publisher";
@@ -15,11 +15,6 @@ export class CartCreatedListener extends Listener<CartConfirmedEvent> {
 
   async onMessage(data: CartConfirmedEvent["data"], msg: Message) {
     const { id, products } = data;
-
-    const cart = await Cart.findById(id);
-    if (!cart) {
-      throw new BadRequestError(`Cart not found for ID: ${id}`);
-    }
 
     const session = await mongoose.startSession();
     session.startTransaction();
@@ -59,7 +54,7 @@ export class CartCreatedListener extends Listener<CartConfirmedEvent> {
 
       await new CartInventoryChecked(natsWrapper.client).publish({
         cartId: orderInventory.cartId.toString(),
-        status: "confirmed",
+        status: InventoryCheckSatus.confirmed,
       });
 
       await new OrderInventoryCreatedPublisher(natsWrapper.client).publish({
@@ -79,10 +74,9 @@ export class CartCreatedListener extends Listener<CartConfirmedEvent> {
       console.error(`Error processing cart ID: ${id}`);
       console.error("Transaction aborted due to error: ", error);
 
-      // Publish the cancelled event and acknowledge the message
       await new CartInventoryChecked(natsWrapper.client).publish({
         cartId: id.toString(),
-        status: "cancelled",
+        status: InventoryCheckSatus.cancelled,
       });
 
       msg.ack();

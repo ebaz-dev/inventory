@@ -1,6 +1,11 @@
 import { Document, Schema, model, Types } from "mongoose";
 import { updateIfCurrentPlugin } from "mongoose-update-if-current";
 
+export enum InventoryCheckSatus {
+  cancelled = "cancelled",
+  confirmed = "confirmed",
+}
+
 interface InventoryDoc extends Document {
   _id: Types.ObjectId;
   productId: Types.ObjectId;

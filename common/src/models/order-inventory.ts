@@ -1,5 +1,6 @@
 import { Document, Schema, model, Types } from "mongoose";
 import { updateIfCurrentPlugin } from "mongoose-update-if-current";
+import { OrderStatus, CartStatus } from "@ebazdev/order";
 
 export interface Product {
   id: Types.ObjectId;
@@ -11,10 +12,9 @@ interface OrderInventoryDoc extends Document {
   supplierId?: Types.ObjectId;
   merchantId?: Types.ObjectId;
   cartId: Types.ObjectId;
-  cartStatus?: string;
+  cartStatus?: CartStatus;
   orderId?: Types.ObjectId;
-  orderStatus?: string;
-  orderDate?: Date;
+  orderStatus?: OrderStatus;
   products: Product[];
 }
 
@@ -54,6 +54,7 @@ const orderInventorySchema = new Schema<OrderInventoryDoc>(
     cartStatus: {
       type: String,
       required: false,
+      enum: Object.values(CartStatus),
     },
     orderId: {
       type: Schema.Types.ObjectId,
@@ -62,9 +63,8 @@ const orderInventorySchema = new Schema<OrderInventoryDoc>(
     },
     orderStatus: {
       type: String,
-    },
-    orderDate: {
-      type: Date,
+      required: false,
+      enum: Object.values(OrderStatus),
     },
     products: {
       type: [itemSchema],
