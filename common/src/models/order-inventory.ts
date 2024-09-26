@@ -1,10 +1,23 @@
 import { Document, Schema, model, Types } from "mongoose";
 import { updateIfCurrentPlugin } from "mongoose-update-if-current";
-import { OrderStatus, CartStatus } from "@ebazdev/order";
-
 export interface Product {
   id: Types.ObjectId;
   quantity: number;
+}
+
+enum CartStatus {
+  Created = "created",
+  Pending = "pending",
+  Ordered = "ordered",
+  Cancelled = "cancelled",
+}
+
+enum OrderStatus {
+  Created = "created",
+  Pending = "pending",
+  Confirmed = "confirmed",
+  Delivered = "delivered",
+  Cancelled = "cancelled",
 }
 
 interface OrderInventoryDoc extends Document {
