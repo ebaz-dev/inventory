@@ -20,23 +20,23 @@ export class CartCreatedListener extends Listener<CartConfirmedEvent> {
     session.startTransaction();
 
     try {
+      let insufficientProducts: string[] = [];
+
       for (const product of products) {
         const inventory = await Inventory.findOne({
           productId: product.id,
         }).session(session);
 
         if (!inventory) {
-          throw new BadRequestError(
-            `Inventory not found for product ID: ${product.id}`
-          );
+          insufficientProducts.push(product.id.toString());
+          continue;
         }
 
         const availableStock = inventory.availableStock;
 
         if (product.quantity > availableStock) {
-          throw new BadRequestError(
-            `Insufficient stock for product ID: ${product.id}`
-          );
+          insufficientProducts.push(product.id.toString());
+          continue;
         }
 
         inventory.availableStock -= product.quantity;
@@ -45,9 +45,16 @@ export class CartCreatedListener extends Listener<CartConfirmedEvent> {
         await inventory.save({ session });
       }
 
+      if (insufficientProducts.length > 0) {
+        throw new InsufficientProductsError(
+          "Insufficient products found",
+          insufficientProducts
+        );
+      }
+
       const orderInventory = new OrderInventory({
         cartId: id,
-        products,
+        products: products,
       });
 
       await orderInventory.save({ session });
@@ -71,17 +78,32 @@ export class CartCreatedListener extends Listener<CartConfirmedEvent> {
       msg.ack();
     } catch (error) {
       await session.abortTransaction();
-      console.error(`Error processing cart ID: ${id}`);
-      console.error("Transaction aborted due to error: ", error);
 
-      await new CartInventoryChecked(natsWrapper.client).publish({
-        cartId: id.toString(),
-        status: InventoryCheckSatus.cancelled,
-      });
+      if (error instanceof InsufficientProductsError) {
+        console.error("Insufficient product IDs:", error.productIds);
+        await new CartInventoryChecked(natsWrapper.client).publish({
+          cartId: id.toString(),
+          status: InventoryCheckSatus.cancelled,
+          insufficientProducts: error.productIds,
+        });
 
-      msg.ack();
+        msg.ack();
+      } else {
+        console.error(`Error processing cart ID: ${id}`);
+        console.error("Transaction aborted due to error: ", error);
+      }
     } finally {
       await session.endSession();
     }
+  }
+}
+
+class InsufficientProductsError extends Error {
+  productIds: string[];
+
+  constructor(message: string, productIds: string[]) {
+    super(message);
+    this.productIds = productIds;
+    this.name = "InsufficientProductsError";
   }
 }
