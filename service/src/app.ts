@@ -6,6 +6,7 @@ import cookieSession from "cookie-session";
 import { listRouter } from "./routes/list";
 import { getRouter } from "./routes/get";
 import dotenv from "dotenv";
+import { healthRouter } from "./routes/health";
 
 dotenv.config();
 
@@ -24,6 +25,7 @@ app.use(
 
 app.use(apiPrefix, listRouter);
 app.use(apiPrefix, getRouter);
+app.use(apiPrefix, healthRouter);
 
 app.all("*", async () => {
   throw new NotFoundError();
