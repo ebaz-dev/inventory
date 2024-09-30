@@ -23,9 +23,9 @@ app.use(
   })
 );
 
+app.use(apiPrefix, healthRouter);
 app.use(apiPrefix, listRouter);
 app.use(apiPrefix, getRouter);
-app.use(apiPrefix, healthRouter);
 
 app.all("*", async () => {
   throw new NotFoundError();
