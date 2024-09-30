@@ -1,6 +1,6 @@
 import { Message } from "node-nats-streaming";
 import { Listener, BadRequestError } from "@ebazdev/core";
-import { CartConfirmedEvent, CartEventSubjects } from "@ebazdev/order";
+import { CartConfirmedEvent, CartEventSubjects, Cart } from "@ebazdev/order";
 import { queueGroupName } from "./queu-group-name";
 import { Inventory, InventoryCheckSatus } from "../../shared/models/inventory";
 import { OrderInventory } from "../../shared/models/order-inventory";
@@ -22,34 +22,44 @@ export class CartCreatedListener extends Listener<CartConfirmedEvent> {
     try {
       let insufficientProducts: string[] = [];
 
-      for (const product of products) {
-        const inventory = await Inventory.findOne({
-          productId: product.id,
-        }).session(session);
+      const cart = await Cart.findById(id)
 
-        if (!inventory) {
-          insufficientProducts.push(product.id.toString());
-          continue;
-        }
-
-        const availableStock = inventory.availableStock;
-
-        if (product.quantity > availableStock) {
-          insufficientProducts.push(product.id.toString());
-          continue;
-        }
-
-        inventory.availableStock -= product.quantity;
-        inventory.reservedStock += product.quantity;
-
-        await inventory.save({ session });
+      if (!cart) {
+        throw new BadRequestError("Cart not found");
       }
+      
+      const customerId = cart.supplierId.toString()
 
-      if (insufficientProducts.length > 0) {
-        throw new InsufficientProductsError(
-          "Insufficient products found",
-          insufficientProducts
-        );
+      if (customerId !== "66ebe3e3c0acbbab7824b195") {
+          for (const product of products) {
+          const inventory = await Inventory.findOne({
+            productId: product.id,
+          }).session(session);
+
+          if (!inventory) {
+            insufficientProducts.push(product.id.toString());
+            continue;
+          }
+
+          const availableStock = inventory.availableStock;
+
+          if (product.quantity > availableStock) {
+            insufficientProducts.push(product.id.toString());
+            continue;
+          }
+
+          inventory.availableStock -= product.quantity;
+          inventory.reservedStock += product.quantity;
+
+          await inventory.save({ session });
+        }
+
+        if (insufficientProducts.length > 0) {
+          throw new InsufficientProductsError(
+            "Insufficient products found",
+            insufficientProducts
+          );
+        }
       }
 
       const orderInventory = new OrderInventory({
