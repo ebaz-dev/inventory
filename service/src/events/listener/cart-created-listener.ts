@@ -41,8 +41,8 @@ export class CartCreatedListener extends Listener<CartConfirmedEvent> {
         supplierId === "66f12d655e36613db5743430"
       ) {
         const productIds = products
-          .map((item: any) => item.id.$oid)
-          .filter((id: string) => mongoose.Types.ObjectId.isValid(id))
+          .map((item: any) => item.id?.$oid || item.id)
+          .filter((id: string) => mongoose.Types.ObjectId.isValid(id) && id)
           .join(",");
 
         const idsArray = productIds.split(",").map((id: string) => id.trim());
