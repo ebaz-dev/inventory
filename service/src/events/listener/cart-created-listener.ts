@@ -7,7 +7,12 @@ import { OrderInventory } from "../../shared/models/order-inventory";
 import { OrderInventoryCreatedPublisher } from "../publisher/order-inventory-created-publisher";
 import { CartInventoryChecked } from "../publisher/cart-inventory-checked-publisher";
 import { natsWrapper } from "../../nats-wrapper";
-import mongoose from "mongoose";
+import {
+  IReturnFindWithAdjustedPrice,
+  Product,
+  ProductDoc,
+} from "@ebazdev/product";
+import mongoose, { Types } from "mongoose";
 
 export class CartCreatedListener extends Listener<CartConfirmedEvent> {
   readonly subject = CartEventSubjects.CartConfirmed;
@@ -22,16 +27,67 @@ export class CartCreatedListener extends Listener<CartConfirmedEvent> {
     try {
       let insufficientProducts: string[] = [];
 
-      const cart = await Cart.findById(id)
+      const cart = await Cart.findById(id);
 
       if (!cart) {
         throw new BadRequestError("Cart not found");
       }
-      
-      const customerId = cart.supplierId.toString()
 
-      if (customerId !== "66ebe3e3c0acbbab7824b195") {
-          for (const product of products) {
+      const supplierId = cart.supplierId.toString();
+      let merchantProducts: any = [];
+
+      if (
+        supplierId === "66ebe3e3c0acbbab7824b195" ||
+        supplierId === "66f12d655e36613db5743430"
+      ) {
+        const productIds = products
+          .map((item: any) => item.id.$oid)
+          .filter((id: string) => mongoose.Types.ObjectId.isValid(id))
+          .join(",");
+
+        const idsArray = productIds.split(",").map((id: string) => id.trim());
+        const query = {
+          _id: { $in: idsArray },
+          customerId: supplierId.toString(),
+        };
+        const skip = 0;
+        const limit = 100;
+        const sort: { [key: string]: 1 | -1 } = { priority: 1 };
+
+        const result: IReturnFindWithAdjustedPrice =
+          await Product.findWithAdjustedPrice({
+            query,
+            skip,
+            limit,
+            sort,
+            merchant: {
+              merchantId: cart.merchantId,
+              businessTypeId: new Types.ObjectId(),
+            },
+          });
+
+        merchantProducts = result.products;
+      }
+
+      for (const product of products) {
+        if (
+          supplierId === "66ebe3e3c0acbbab7824b195" ||
+          supplierId === "66f12d655e36613db5743430"
+        ) {
+          const merchantProduct = merchantProducts.find(
+            (mp: any) => mp._id.toString() === product.id
+          );
+
+          if (!merchantProduct || !merchantProduct.inventory) {
+            insufficientProducts.push(product.id.toString());
+            continue;
+          }
+
+          if (merchantProduct.inventory?.availableStock < product.quantity) {
+            insufficientProducts.push(product.id.toString());
+            continue;
+          }
+        } else {
           const inventory = await Inventory.findOne({
             productId: product.id,
           }).session(session);
@@ -53,13 +109,13 @@ export class CartCreatedListener extends Listener<CartConfirmedEvent> {
 
           await inventory.save({ session });
         }
+      }
 
-        if (insufficientProducts.length > 0) {
-          throw new InsufficientProductsError(
-            "Insufficient products found",
-            insufficientProducts
-          );
-        }
+      if (insufficientProducts.length > 0) {
+        throw new InsufficientProductsError(
+          "Insufficient products found",
+          insufficientProducts
+        );
       }
 
       const orderInventory = new OrderInventory({
